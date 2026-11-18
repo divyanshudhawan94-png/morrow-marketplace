@@ -112,25 +112,54 @@ function formatPrice(priceMinor: number): string {
   }).format(priceMinor / 100);
 }
 
+function selectHeroProducts(products: FeaturedProduct[]): FeaturedProduct[] {
+  return products
+    .flatMap((product) => {
+      const images = product.images.filter((image) => image.url.trim().length > 0);
+      return images.length > 0 ? [{ ...product, images }] : [];
+    })
+    .slice(0, 3);
+}
+
 function ProductGrid({
   products,
   loading,
   emptyMessage,
+  variant = "standard",
 }: {
   products: FeaturedProduct[];
   loading: boolean;
   emptyMessage: string;
+  variant?: "standard" | "hero";
 }) {
   if (loading) {
-    return <p className="catalog-message" role="status">Finding festive favourites…</p>;
+    if (variant === "hero") {
+      return (
+        <p className="winter-hero-products-state" role="status">
+          Finding current favourites from Morrow stores…
+        </p>
+      );
+    }
+    return <p className="catalog-message" role="status">Finding winter favourites…</p>;
   }
   if (products.length === 0) {
+    if (variant === "hero") {
+      return (
+        <div className="winter-hero-products-empty">
+          <span aria-hidden="true">✳</span>
+          <p>New finds will appear here as Morrow stores add their latest pieces.</p>
+        </div>
+      );
+    }
     return <p className="catalog-message">{emptyMessage}</p>;
   }
   return (
-    <div className="product-grid">
+    <div className={`product-grid${variant === "hero" ? " winter-hero-products" : ""}`}>
       {products.map((product) => (
-        <article className="product-card diwali-product-card" key={product.id}>
+        <article
+          className={`product-card winter-product-card${variant === "hero" ? " winter-hero-product-card" : ""}`}
+          key={product.id}
+        >
           <Link
             className="product-photo"
             href={`/catalog/${encodeURIComponent(product.id)}`}
@@ -139,19 +168,26 @@ function ProductGrid({
             <ProductImageGallery
               images={product.images}
               title={product.title}
-              sizes="(max-width: 650px) 50vw, (max-width: 1000px) 33vw, 25vw"
+              showPosition={variant !== "hero"}
+              sizes={variant === "hero"
+                ? "(max-width: 760px) 28vw, (max-width: 1024px) 20vw, 14vw"
+                : "(max-width: 650px) 50vw, (max-width: 1000px) 33vw, 25vw"}
             />
-            <span className="diwali-product-arrow" aria-hidden="true">↗</span>
+            {variant !== "hero" && (
+              <span className="winter-product-arrow" aria-hidden="true">↗</span>
+            )}
           </Link>
-          <div className="product-card-copy">
-            <p className="product-brand">
-              {product.brand} <span aria-hidden="true">·</span> {categoryLabel(product.category)}
-            </p>
-            <h2>
-              <Link href={`/catalog/${encodeURIComponent(product.id)}`}>{product.title}</Link>
-            </h2>
-            <p className="product-price">{formatPrice(product.priceMinor)}</p>
-          </div>
+          {variant !== "hero" && (
+            <div className="product-card-copy">
+              <p className="product-brand">
+                {product.brand} <span aria-hidden="true">·</span> {categoryLabel(product.category)}
+              </p>
+              <h2>
+                <Link href={`/catalog/${encodeURIComponent(product.id)}`}>{product.title}</Link>
+              </h2>
+              <p className="product-price">{formatPrice(product.priceMinor)}</p>
+            </div>
+          )}
         </article>
       ))}
     </div>
@@ -306,7 +342,7 @@ export default function Home() {
     setCategory("");
     setQuery("");
     void applyFilters({ maxPrice, limit: 8 }, "", "");
-    document.getElementById("festive-finds")?.scrollIntoView({ behavior: "smooth" });
+    document.getElementById("winter-finds")?.scrollIntoView({ behavior: "smooth" });
   }
 
   function resetSearch() {
@@ -318,6 +354,7 @@ export default function Home() {
   }
 
   const featuredCategories = categories.slice(0, 6);
+  const heroProducts = selectHeroProducts(products);
   const suggestionOptions = createSearchSuggestions(suggestions);
   const catalogParams = new URLSearchParams();
   if (query.trim()) catalogParams.set("q", query.trim());
@@ -326,55 +363,51 @@ export default function Home() {
   const catalogHref = catalogQuery ? `/catalog?${catalogQuery}` : "/catalog";
 
   return (
-    <main className="diwali-storefront">
-      <div className="announcement diwali-announcement">
-        <span aria-hidden="true">✦</span> THE LIGHTS ARE ON · CELEBRATE DIWALI WITH MORROW <span aria-hidden="true">✦</span>
+    <main className="winter-storefront">
+      <div className="announcement winter-announcement">
+        <span aria-hidden="true">✦</span> WINTER, THOUGHTFULLY FOUND · GOOD THINGS FROM INDEPENDENT STORES <span aria-hidden="true">✦</span>
       </div>
       <MorrowHeader home />
 
-      <section className="diwali-hero" id="discover">
-        <div className="diwali-hero-glow" aria-hidden="true" />
-        <div className="diwali-hero-copy">
-          <p className="diwali-kicker"><span aria-hidden="true">✦</span> THE FESTIVE EDIT · 2026</p>
-          <h1>Diwali Mega Sale<span className="diwali-title-dot">.</span></h1>
-          <p className="diwali-hero-subtitle">A little more light. A lot more meaning.</p>
-          <p className="diwali-hero-description">
-            Discover thoughtful finds from independent stores, made for gifting,
-            gathering and celebrating.
+      <section className="winter-hero" id="discover">
+        <div className="winter-hero-glow" aria-hidden="true" />
+        <div className="winter-hero-copy">
+          <p className="winter-kicker"><span aria-hidden="true">✦</span> THE MORROW WINTER EDIT</p>
+          <h1>Winter Collection<span className="winter-title-dot">.</span></h1>
+          <p className="winter-hero-subtitle">Made for the season, and all the moments in it.</p>
+          <p className="winter-hero-description">
+            Find warm layers, seasonal essentials, considered home comforts and
+            thoughtful gifts, all from independent stores.
           </p>
-          <a className="diwali-primary-button" href="#festive-finds">
-            Explore festive finds <span aria-hidden="true">↘</span>
+          <a className="winter-primary-button" href="#winter-finds">
+            Explore Winter Collection <span aria-hidden="true">↘</span>
           </a>
-          <div className="diwali-hero-notes" aria-label="Marketplace highlights">
-            <span><i aria-hidden="true">✳</i> Independent makers</span>
-            <span><i aria-hidden="true">✳</i> Real store listings</span>
+          <div className="winter-hero-notes" aria-label="Marketplace highlights">
+            <span><i aria-hidden="true">✳</i> Independent stores</span>
+            <span><i aria-hidden="true">✳</i> Thoughtful finds</span>
           </div>
         </div>
-        <div className="diwali-lantern-art" role="img" aria-label="Illustrated festive diya lamps and golden lights">
-          <span className="diwali-orbit diwali-orbit-one" />
-          <span className="diwali-orbit diwali-orbit-two" />
-          <span className="diwali-art-star star-one">✦</span>
-          <span className="diwali-art-star star-two">✧</span>
-          <span className="diwali-art-star star-three">✦</span>
-          <span className="diwali-diya diya-back"><i /></span>
-          <span className="diwali-diya diya-front"><i /></span>
-          <span className="diwali-art-caption">LIGHT UP THE EVERYDAY</span>
-        </div>
-        <form className="diwali-search" role="search" onSubmit={submitSearch}>
-          <label className="visually-hidden" htmlFor="diwali-search-input">Search products</label>
-          <span className="diwali-search-icon" aria-hidden="true">⌕</span>
+        <ProductGrid
+          products={heroProducts}
+          loading={loading}
+          emptyMessage="New finds will appear here as Morrow stores add their latest pieces."
+          variant="hero"
+        />
+        <form className="winter-search" role="search" onSubmit={submitSearch}>
+          <label className="visually-hidden" htmlFor="winter-search-input">Search products</label>
+          <span className="winter-search-icon" aria-hidden="true">⌕</span>
           <input
-            id="diwali-search-input"
+            id="winter-search-input"
             type="search"
             value={query}
             placeholder="Search gifts, home, accessories…"
             autoComplete="off"
             aria-autocomplete="list"
             aria-expanded={suggestionsOpen && query.trim().length >= 2}
-            aria-controls="diwali-search-suggestions"
+            aria-controls="winter-search-suggestions"
             aria-activedescendant={
               activeSuggestion >= 0
-                ? `diwali-search-option-${activeSuggestion}`
+                ? `winter-search-option-${activeSuggestion}`
                 : undefined
             }
             onFocus={() => setSuggestionsOpen(true)}
@@ -409,9 +442,9 @@ export default function Home() {
               }
             }}
           />
-          <label className="visually-hidden" htmlFor="diwali-search-category">Filter by category</label>
+          <label className="visually-hidden" htmlFor="winter-search-category">Filter by category</label>
           <select
-            id="diwali-search-category"
+            id="winter-search-category"
             value={category}
             onChange={(event) => chooseCategory(event.target.value)}
             aria-label="Filter products by category"
@@ -421,18 +454,18 @@ export default function Home() {
               <option value={entry} key={entry}>{categoryLabel(entry)}</option>
             ))}
           </select>
-          <button type="submit" className="diwali-search-submit">Search</button>
+          <button type="submit" className="winter-search-submit">Search</button>
           {suggestionsOpen && query.trim().length >= 2 && (
-            <div className="diwali-suggestions" id="diwali-search-suggestions" role="listbox" aria-label="Product suggestions">
+            <div className="winter-suggestions" id="winter-search-suggestions" role="listbox" aria-label="Product suggestions">
               {suggestionError ? (
-                <p className="diwali-suggestion-state" role="alert">{suggestionError}</p>
+                <p className="winter-suggestion-state" role="alert">{suggestionError}</p>
               ) : suggestionLoading ? (
-                <p className="diwali-suggestion-state" role="status">Finding matching suggestions…</p>
+                <p className="winter-suggestion-state" role="status">Finding matching suggestions…</p>
               ) : suggestionOptions.length > 0 ? (
                 suggestionOptions.map((suggestion, index) => (
                   <button
-                    className="diwali-suggestion"
-                    id={`diwali-search-option-${index}`}
+                    className="winter-suggestion"
+                    id={`winter-search-option-${index}`}
                     type="button"
                     key={suggestion.key}
                     role="option"
@@ -440,32 +473,32 @@ export default function Home() {
                     onMouseEnter={() => setActiveSuggestion(index)}
                     onClick={() => chooseSuggestion(suggestion)}
                   >
-                    <span className="diwali-suggestion-name">
+                    <span className="winter-suggestion-name">
                       <HighlightedSearchText text={suggestion.label} query={query} />
                     </span>
-                    <span className="diwali-suggestion-detail">
+                    <span className="winter-suggestion-detail">
                       <span>{suggestion.kind === "product" ? "PRODUCT" : suggestion.kind === "brand" ? "BRAND" : "CATEGORY"}</span>
                       {suggestion.detail}
                     </span>
                   </button>
                 ))
               ) : (
-                <p className="diwali-suggestion-state" role="status">No matching suggestions. Try another search.</p>
+                <p className="winter-suggestion-state" role="status">No matching suggestions. Try another search.</p>
               )}
             </div>
           )}
         </form>
       </section>
 
-      <section className="diwali-category-strip" aria-label="Shop categories">
-        <div className="diwali-category-heading">
-          <span>SHOP THE CELEBRATION</span>
+      <section className="winter-category-strip" aria-label="Shop categories">
+        <div className="winter-category-heading">
+          <span>EXPLORE THE COLLECTION</span>
           <Link href="/catalog">View all <span aria-hidden="true">↗</span></Link>
         </div>
-        <div className="diwali-category-list">
+        <div className="winter-category-list">
           {featuredCategories.length > 0 ? featuredCategories.map((entry, index) => (
             <button
-              className={`diwali-category-chip${category === entry ? " is-active" : ""}`}
+              className={`winter-category-chip${category === entry ? " is-active" : ""}`}
               type="button"
               onClick={() => chooseCategory(entry)}
               key={entry}
@@ -474,43 +507,43 @@ export default function Home() {
               {categoryLabel(entry)}
             </button>
           )) : (
-            <span className="diwali-category-loading">{loading ? "Gathering categories…" : "Browse the collection to discover categories."}</span>
+            <span className="winter-category-loading">{loading ? "Gathering categories…" : "Browse the collection to discover categories."}</span>
           )}
         </div>
       </section>
 
-      <section className="diwali-promos" aria-label="Festive shopping shortcuts">
-        <Link className="diwali-promo-card promo-gifting" href="/catalog">
-          <span className="diwali-promo-index">01 / THE ART OF GIVING</span>
-          <span className="diwali-promo-copy"><strong>Gifts with a little more heart.</strong><i aria-hidden="true">↗</i></span>
-          <span className="diwali-promo-detail">Discover independent store finds</span>
+      <section className="winter-promos" aria-label="Winter shopping shortcuts">
+        <Link className="winter-promo-card promo-gifting" href="/catalog">
+          <span className="winter-promo-index">01 / THOUGHTFUL GIFTING</span>
+          <span className="winter-promo-copy"><strong>Gifts to make the season warmer.</strong><i aria-hidden="true">↗</i></span>
+          <span className="winter-promo-detail">Find something personal from independent stores</span>
         </Link>
-        <button className="diwali-promo-card promo-under" type="button" onClick={() => choosePrice(250000)}>
-          <span className="diwali-promo-index">02 / THOUGHTFUL FINDS</span>
-          <span className="diwali-promo-copy"><strong>Little luxuries under ₹2,500.</strong><i aria-hidden="true">↗</i></span>
-          <span className="diwali-promo-detail">Live listings, sorted by price</span>
+        <button className="winter-promo-card promo-under" type="button" onClick={() => choosePrice(250000)}>
+          <span className="winter-promo-index">02 / EVERYDAY LAYERS</span>
+          <span className="winter-promo-copy"><strong>Winter favourites under ₹2,500.</strong><i aria-hidden="true">↗</i></span>
+          <span className="winter-promo-detail">Browse current listings by price</span>
         </button>
-        <button className="diwali-promo-card promo-home" type="button" onClick={() => choosePrice(500000)}>
-          <span className="diwali-promo-index">03 / A WARMER HOME</span>
-          <span className="diwali-promo-copy"><strong>Make room for a little glow.</strong><i aria-hidden="true">↗</i></span>
-          <span className="diwali-promo-detail">Explore current finds under ₹5,000</span>
+        <button className="winter-promo-card promo-home" type="button" onClick={() => choosePrice(500000)}>
+          <span className="winter-promo-index">03 / HOME COMFORTS</span>
+          <span className="winter-promo-copy"><strong>Bring a little more warmth home.</strong><i aria-hidden="true">↗</i></span>
+          <span className="winter-promo-detail">Explore current finds under ₹5,000</span>
         </button>
       </section>
 
-      <section className="diwali-products-section" id="festive-finds" aria-labelledby="festive-heading">
-        <div className="diwali-section-heading">
+      <section className="winter-products-section" id="winter-finds" aria-labelledby="winter-heading">
+        <div className="winter-section-heading">
           <div>
-            <p className="diwali-section-kicker">MADE BY PEOPLE, FOUND BY YOU</p>
-            <h2 id="festive-heading">
-              {query || category ? "Your festive finds." : "A brighter kind of finding."}
+            <p className="winter-section-kicker">MADE BY PEOPLE, FOUND BY YOU</p>
+            <h2 id="winter-heading">
+              {query || category ? "Your winter finds." : "A considered collection."}
             </h2>
             <p>Current prices and products, straight from approved Morrow stores.</p>
           </div>
-          <div className="diwali-section-actions">
+          <div className="winter-section-actions">
             {(query || category) && (
-              <button type="button" className="diwali-clear-filter" onClick={resetSearch}>Clear filters ×</button>
+              <button type="button" className="winter-clear-filter" onClick={resetSearch}>Clear filters ×</button>
             )}
-            <Link className="diwali-text-link" href={catalogHref}>Shop all products <span aria-hidden="true">↗</span></Link>
+            <Link className="winter-text-link" href={catalogHref}>Shop all products <span aria-hidden="true">↗</span></Link>
           </div>
         </div>
         {error && (
@@ -537,34 +570,34 @@ export default function Home() {
             : "No live products match just yet. Explore the full collection."}
         />}
         {!error && !searching && visibleProducts.length === 0 && (query || category) && (
-          <button type="button" className="diwali-clear-filter diwali-no-results-action" onClick={resetSearch}>
+          <button type="button" className="winter-clear-filter winter-no-results-action" onClick={resetSearch}>
             Change search
           </button>
         )}
       </section>
 
-      <section className="diwali-price-edit" aria-labelledby="price-edit-heading">
+      <section className="winter-price-edit" aria-labelledby="price-edit-heading">
         <div>
-          <p className="diwali-section-kicker">THE FESTIVE PRICE EDIT</p>
+          <p className="winter-section-kicker">THE WINTER PRICE EDIT</p>
           <h2 id="price-edit-heading">Find something lovely, at your pace.</h2>
           <p>Price picks use current product listings from our stores. No marked-down prices are shown unless a store has provided them.</p>
         </div>
-        <div className="diwali-price-buttons">
+        <div className="winter-price-buttons">
           <button type="button" onClick={() => choosePrice(250000)}>Under ₹2,500 <span aria-hidden="true">↗</span></button>
           <button type="button" onClick={() => choosePrice(500000)}>Under ₹5,000 <span aria-hidden="true">↗</span></button>
         </div>
       </section>
 
-      <section className="diwali-maker-note" id="about">
-        <span className="diwali-maker-spark" aria-hidden="true">✦</span>
+      <section className="winter-maker-note" id="about">
+        <span className="winter-maker-spark" aria-hidden="true">✦</span>
         <div>
-          <p className="diwali-section-kicker">A MARKETPLACE WITH A HUMAN SIDE</p>
+          <p className="winter-section-kicker">A MARKETPLACE WITH A HUMAN SIDE</p>
           <h2>Every good find starts with a good person.</h2>
         </div>
-        <p>Celebrate with independent stores and the people behind them. Thoughtful things, discovered together.</p>
+        <p>Discover independent stores and the people behind them. Thoughtful things, found together.</p>
       </section>
 
-      <footer className="site-footer diwali-footer">
+      <footer className="site-footer winter-footer">
         <Link className="wordmark" href="/">morrow<span>.</span></Link>
         <span>Good things, found in good company.</span>
         <span>© Morrow Market</span>
