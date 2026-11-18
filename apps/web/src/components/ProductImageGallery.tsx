@@ -34,10 +34,12 @@ export default function ProductImageGallery({
   images,
   title,
   sizes,
+  showPosition = true,
 }: {
   images: ProductGalleryImage[];
   title: string;
   sizes: string;
+  showPosition?: boolean;
 }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -117,7 +119,7 @@ export default function ProductImageGallery({
       ) : (
         <span className="image-placeholder">Image awaiting review</span>
       )}
-      {images.length > 1 && (
+      {showPosition && images.length > 1 && (
         <span className="product-gallery-position" aria-hidden="true">
           {activeIndex + 1} / {images.length}
         </span>
