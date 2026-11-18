@@ -1,0 +1,23 @@
+{
+  "name": "marketplace-platform",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "concurrently -k \"npm:dev:api\" \"npm:dev:web\"",
+    "dev:api": "npm run dev --workspace @marketplace/api",
+    "dev:web": "npm run dev --workspace @marketplace/web",
+    "db:local:setup": "npm run db:local:setup --workspace @marketplace/api",
+    "db:bootstrap-admin": "npm run db:bootstrap-admin --workspace @marketplace/api",
+    "build": "npm run build --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
